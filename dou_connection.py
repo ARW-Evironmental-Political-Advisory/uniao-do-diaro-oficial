@@ -24,7 +24,9 @@ class DOUExtractor:
         with open("config.json", encoding="utf8") as file:
             return json.load(file)
 
-    def download(self, date_: str, sections: list[str], date_format: str = "%Y-%m-%d") -> None:
+    def download(
+        self, date_: str, sections: list[str], date_format: str = "%Y-%m-%d"
+    ) -> None:
         "Baixa os arquivos zipados do Inlabs da data e seções especificadas e os salva na pasta temp."
         if self.session.cookies.get("inlabs_session_cookie"):
             cookie = self.session.cookies.get("inlabs_session_cookie")
@@ -56,7 +58,12 @@ class DOUExtractor:
             )
             if response_arquivo.status_code == 200:
                 with open(
-                    self.config["DOWNLOAD_FOLDER"] + "/" + data_completa + "-" + dou_secao + ".zip",
+                    self.config["DOWNLOAD_FOLDER"]
+                    + "/"
+                    + data_completa
+                    + "-"
+                    + dou_secao
+                    + ".zip",
                     "wb",
                 ) as f:
                     f.write(response_arquivo.content)
@@ -77,7 +84,11 @@ class DOUExtractor:
         }
         try:
             self.session.request(
-                "POST", self.config("URL_LOGIN"), data=payload, headers=headers, verify=False
+                "POST",
+                self.config("URL_LOGIN"),
+                data=payload,
+                headers=headers,
+                verify=False,
             )
             print("Logado.")
         except requests.exceptions.ConnectionError:
@@ -89,7 +100,9 @@ class DOUExtractor:
         for file_name in files_names:
             # opening the zip file in READ mode
             try:
-                with zipfile.ZipFile(self.config["DOWNLOAD_FOLDER"] + "/" + file_name, "r") as zipf:
+                with zipfile.ZipFile(
+                    self.config["DOWNLOAD_FOLDER"] + "/" + file_name, "r"
+                ) as zipf:
                     # extracting all the files
                     print(f"Extracting all the files now from zipfile {file_name}...")
                     zipf.extractall(self.config["UNZIP_FOLDER"])
@@ -126,7 +139,10 @@ class DOUExtractor:
                 "orgao": article["@artCategory"],
                 "ementa": article["body"]["Ementa"],
                 "excerto": get_texto_excerto(soup),
+                "texto_principal": get_texto_principal(soup),
                 "texto_completo": texto,
+                "assinatura": get_assinaturas(soup),
+                "cargo": get_cargos(soup),
                 "secao": int(com.findall(article["@pubName"])[0]),
                 "edicao": article["@editionNumber"],
                 "tipo_edicao": "Extra" if "E" in article["@pubName"] else "Ordinária",
@@ -135,9 +151,7 @@ class DOUExtractor:
                 "url": None,
                 "url_versao_certificada": article["@pdfPage"],
                 "data_captura": datetime.today(),
-                "assinatura": get_assinaturas(soup),
-                "cargo": get_cargos(soup),
-                "texto_principal": get_texto_principal(soup),
+                "data_publicacao_particao": None,
             }
 
             final_list.append(ato_dict)
@@ -195,6 +209,7 @@ def get_texto_principal(soup):
     except IndexError:
         return ""
 
+
 def get_texto_excerto(soup):
     return None
     # if not soup:
@@ -204,6 +219,7 @@ def get_texto_excerto(soup):
     #     return text
     # except IndexError:
     #     return ""
+
 
 def get_assinaturas(soup):
     if not soup:
@@ -222,6 +238,7 @@ def get_cargos(soup):
         return None
     return "|".join([sign.get_text() for sign in res])
 
+
 def get_dates_from_interval(
     start_date: str | datetime | date,
     end_date: str | datetime | date,
@@ -234,8 +251,6 @@ def get_dates_from_interval(
         end_date = datetime.strptime(end_date, date_format).date()
     sdate = min(start_date, end_date)
     edate = max(start_date, end_date)
-    dates_list = [
-        sdate + timedelta(days=x) for x in range((edate - sdate).days + 1)
-    ]
+    dates_list = [sdate + timedelta(days=x) for x in range((edate - sdate).days + 1)]
     dates_list = [d.strftime(date_format) for d in dates_list]
     return dates_list
