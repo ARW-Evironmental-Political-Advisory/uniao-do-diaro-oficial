@@ -7,7 +7,6 @@ from datetime import date, datetime, timedelta
 import requests
 import urllib3
 import xmltodict
-from bs4 import BeautifulSoup
 from tqdm import tqdm
 
 from act import Act
